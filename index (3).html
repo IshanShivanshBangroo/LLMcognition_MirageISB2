@@ -1,0 +1,1337 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Low-Articulation Metacognitive Decision Support Prototype</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    :root{
+      --bg:#f5f5f7;
+      --card:#ffffff;
+      --accent:#2f4f7f;
+      --accent-soft:#e2e8f5;
+      --border-soft:#d7d7e0;
+      --text-main:#1f2430;
+      --text-soft:#555b6b;
+      --danger:#b3261e;
+      --ok:#1d7a3a;
+      --warn-bg:#fef3f2;
+      --ok-bg:#e9f7ef;
+    }
+    *{box-sizing:border-box;}
+    body{
+      margin:0;
+      font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+      background:var(--bg);
+      color:var(--text-main);
+    }
+    .page{min-height:100vh;display:flex;flex-direction:column;}
+    header{
+      padding:16px 24px;
+      background:#fff;
+      border-bottom:1px solid var(--border-soft);
+      display:flex;
+      flex-wrap:wrap;
+      gap:16px;
+      align-items:flex-start;
+      justify-content:space-between;
+    }
+    .title-block{max-width:380px;}
+    .name{font-size:24px;font-weight:600;color:var(--accent);margin-bottom:4px;}
+    .subtitle{font-size:14px;color:var(--text-soft);}
+    .rq-block{
+      flex:1;
+      min-width:260px;
+      max-width:860px;
+      padding:12px 16px;
+      background:var(--accent-soft);
+      border-radius:8px;
+      border:1px solid #c3d0f0;
+    }
+    .rq-label{
+      font-size:12px;
+      letter-spacing:0.06em;
+      text-transform:uppercase;
+      color:var(--accent);
+      margin-bottom:4px;
+    }
+    .rq-text{font-size:13px;line-height:1.4;}
+    main{flex:1;display:flex;min-height:0;}
+    .steps{
+      width:280px;
+      max-width:34%;
+      border-right:1px solid var(--border-soft);
+      background:#fcfcfe;
+      padding:16px 12px;
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+    }
+    .steps-title{font-size:13px;font-weight:600;margin-bottom:4px;color:var(--text-soft);}
+    .step{
+      font-size:13px;
+      padding:10px 10px;
+      border-radius:7px;
+      cursor:pointer;
+      display:flex;
+      flex-direction:column;
+      border:1px solid transparent;
+    }
+    .step-number{
+      font-size:11px;
+      text-transform:uppercase;
+      letter-spacing:0.08em;
+      color:var(--text-soft);
+      margin-bottom:2px;
+    }
+    .step-title{font-weight:500;margin-bottom:2px;}
+    .step-desc{font-size:12px;color:var(--text-soft);}
+    .step.active{background:var(--accent-soft);border-color:#c3d0f0;}
+    .step.completed:not(.active){border-color:#b8e0b0;background:#f1fbf0;}
+    .workspace{
+      flex:1;
+      padding:18px 20px;
+      display:flex;
+      flex-direction:column;
+      gap:14px;
+      overflow-y:auto;
+    }
+    .panel{
+      background:var(--card);
+      border-radius:10px;
+      border:1px solid var(--border-soft);
+      padding:16px 18px;
+      display:none;
+    }
+    .panel.active{display:block;}
+    .panel-header{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:10px;gap:10px;flex-wrap:wrap;}
+    .panel-title{font-size:16px;font-weight:600;}
+    .panel-subtitle{font-size:12px;color:var(--text-soft);max-width:680px;}
+    label{font-size:12px;font-weight:500;display:block;margin-bottom:4px;}
+    textarea,input[type="text"],select{
+      width:100%;
+      padding:7px 8px;
+      border-radius:6px;
+      border:1px solid var(--border-soft);
+      font-size:13px;
+      font-family:inherit;
+      resize:vertical;
+      min-height:40px;
+    }
+    textarea{min-height:70px;}
+    textarea:focus,input:focus,select:focus{
+      outline:none;
+      border-color:var(--accent);
+      box-shadow:0 0 0 1px rgba(47,79,127,0.18);
+    }
+    .hint{font-size:11px;color:var(--text-soft);margin-top:2px;}
+    .fields{
+      display:grid;
+      grid-template-columns:repeat(auto-fit,minmax(240px,1fr));
+      gap:12px 16px;
+    }
+    .button-row{margin-top:12px;display:flex;gap:8px;flex-wrap:wrap;}
+    button{
+      border:none;
+      border-radius:999px;
+      padding:7px 14px;
+      font-size:13px;
+      cursor:pointer;
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
+      background:var(--accent);
+      color:#fff;
+    }
+    button.secondary{background:#f2f3f7;color:var(--text-main);}
+    button.outline{background:transparent;border:1px solid var(--border-soft);color:var(--text-main);}
+    button:disabled{opacity:0.6;cursor:default;}
+    .pill{
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
+      font-size:11px;
+      border-radius:999px;
+      padding:4px 10px;
+      background:#f3f3f7;
+      color:var(--text-soft);
+    }
+    .pill-label{text-transform:uppercase;letter-spacing:0.08em;}
+    .analysis-card{
+      margin-top:10px;
+      padding:10px 12px;
+      border-radius:8px;
+      border:1px solid var(--border-soft);
+      background:#fafbff;
+      font-size:12px;
+      white-space:pre-wrap;
+    }
+    .analysis-title{font-weight:600;margin-bottom:4px;}
+    .two-column{
+      display:grid;
+      grid-template-columns:minmax(260px,1.2fr) minmax(240px,1fr);
+      gap:12px;
+    }
+    .domain-grid{
+      display:grid;
+      grid-template-columns:repeat(auto-fit,minmax(150px,1fr));
+      gap:10px;
+      margin-top:6px;
+    }
+    .domain-card{
+      border:1px solid var(--border-soft);
+      border-radius:10px;
+      padding:10px 10px;
+      background:#fcfcff;
+      cursor:pointer;
+      display:flex;
+      flex-direction:column;
+      gap:4px;
+      min-height:68px;
+    }
+    .domain-card.selected{
+      border-color:#c3d0f0;
+      background:var(--accent-soft);
+    }
+    .domain-title{font-weight:600;font-size:13px;}
+    .domain-desc{font-size:11px;color:var(--text-soft);line-height:1.35;}
+    .check-grid{
+      display:grid;
+      grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+      gap:8px 12px;
+      margin-top:6px;
+    }
+    .check-item{
+      border:1px solid var(--border-soft);
+      border-radius:10px;
+      padding:8px 10px;
+      background:#fcfcff;
+      display:flex;
+      gap:8px;
+      align-items:flex-start;
+    }
+    .check-item input{margin-top:2px;}
+    .check-title{font-weight:600;font-size:12px;}
+    .check-desc{font-size:11px;color:var(--text-soft);line-height:1.35;}
+    .range-group{display:flex;flex-direction:column;gap:4px;}
+    input[type="range"]{width:100%;}
+    .range-labels{display:flex;justify-content:space-between;font-size:10px;color:var(--text-soft);}
+    .options-list{display:flex;flex-direction:column;gap:8px;margin-top:8px;}
+    .option-row{
+      border:1px solid var(--border-soft);
+      border-radius:10px;
+      padding:8px 10px;
+      background:#fcfcff;
+      display:flex;
+      gap:10px;
+      align-items:flex-start;
+      justify-content:space-between;
+    }
+    .option-main{flex:1;}
+    .option-label{font-weight:600;font-size:12px;margin-bottom:2px;}
+    .option-text{font-size:12px;color:var(--text-soft);line-height:1.4;}
+    .option-actions{display:flex;gap:6px;align-items:center;}
+    .mini-btn{
+      border:1px solid var(--border-soft);
+      background:#fff;
+      color:var(--text-main);
+      border-radius:8px;
+      padding:5px 8px;
+      font-size:12px;
+      cursor:pointer;
+    }
+    .mini-btn:disabled{opacity:0.5;cursor:default;}
+    .rec-box{
+      margin-top:10px;
+      padding:10px 12px;
+      border-radius:10px;
+      border:1px solid var(--border-soft);
+      background:#fafafa;
+      font-size:12px;
+      white-space:pre-wrap;
+    }
+    .toggle-row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:4px;}
+    .toggle{
+      border:1px solid var(--border-soft);
+      background:#fff;
+      color:var(--text-main);
+      border-radius:999px;
+      padding:6px 10px;
+      font-size:12px;
+      cursor:pointer;
+    }
+    .toggle.active{
+      background:var(--accent-soft);
+      border-color:#c3d0f0;
+      color:var(--accent);
+      font-weight:600;
+    }
+    .bias-list{
+      display:grid;
+      grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
+      gap:8px;
+      margin-top:8px;
+    }
+    .bias-item{
+      padding:8px 9px;
+      border-radius:10px;
+      border:1px solid var(--border-soft);
+      background:#fcfcff;
+      font-size:12px;
+      cursor:pointer;
+    }
+    .bias-item.selected{border-color:#f5b6b0;background:#fff5f4;}
+    .bias-name{font-weight:600;margin-bottom:2px;}
+    .bias-short{font-size:11px;color:var(--text-soft);line-height:1.35;}
+    .status-pill{
+      font-size:10px;
+      text-transform:uppercase;
+      letter-spacing:0.08em;
+      border-radius:999px;
+      padding:3px 7px;
+      background:var(--ok-bg);
+      color:var(--ok);
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
+    }
+    .warning-pill{
+      font-size:10px;
+      text-transform:uppercase;
+      letter-spacing:0.08em;
+      border-radius:999px;
+      padding:3px 7px;
+      background:var(--warn-bg);
+      color:var(--danger);
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
+    }
+    table{
+      width:100%;
+      border-collapse:collapse;
+      font-size:12px;
+      margin-top:8px;
+    }
+    th,td{
+      border:1px solid var(--border-soft);
+      padding:8px 8px;
+      vertical-align:top;
+    }
+    th{
+      background:#f3f3f7;
+      text-align:left;
+      font-weight:600;
+      font-size:12px;
+    }
+    footer{
+      padding:8px 16px;
+      font-size:11px;
+      color:var(--text-soft);
+      border-top:1px solid var(--border-soft);
+      background:#fff;
+      text-align:right;
+    }
+    @media (max-width: 900px){
+      header{flex-direction:column;}
+      .steps{display:none;}
+      .workspace{padding:12px 10px;}
+      .two-column{grid-template-columns:1fr;}
+    }
+  </style>
+</head>
+<body>
+<div class="page">
+  <header>
+    <div class="title-block">
+      <div class="name">Ishan</div>
+      <div class="subtitle">Prototype: Low-articulation, bias-aware decision support with stability checks</div>
+    </div>
+    <div class="rq-block">
+      <div class="rq-label">Research question</div>
+      <div class="rq-text">
+        How does a low-articulation, structured decision-support interface (with optional LLM assistance) affect
+        decision quality, calibration, and bias awareness for users who begin with ill-defined goals, compared
+        with a chat-first interface, and does adding stability checks reduce unreliable recommendations?
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <aside class="steps">
+      <div class="steps-title">Interaction flow</div>
+
+      <div class="step active" data-step="0">
+        <div class="step-number">Step 0</div>
+        <div class="step-title">Start without typing</div>
+        <div class="step-desc">Selection-based onboarding creates a draft decision frame.</div>
+      </div>
+
+      <div class="step" data-step="1">
+        <div class="step-number">Step 1</div>
+        <div class="step-title">Draft frame and edits</div>
+        <div class="step-desc">Optional text corrections and constraints.</div>
+      </div>
+
+      <div class="step" data-step="2">
+        <div class="step-number">Step 2</div>
+        <div class="step-title">Option space</div>
+        <div class="step-desc">Generate, reorder, and document candidate options.</div>
+      </div>
+
+      <div class="step" data-step="3">
+        <div class="step-number">Step 3</div>
+        <div class="step-title">Bias and evidence</div>
+        <div class="step-desc">Bias prompts and evidence notes.</div>
+      </div>
+
+      <div class="step" data-step="4">
+        <div class="step-number">Step 4</div>
+        <div class="step-title">Stability checks and export</div>
+        <div class="step-desc">Metamorphic tests flag unstable advice before action.</div>
+      </div>
+    </aside>
+
+    <section class="workspace">
+      <!-- STEP 0 -->
+      <div class="panel active" id="step-0">
+        <div class="panel-header">
+          <div class="panel-title">Step 0. Start without typing</div>
+          <div class="panel-subtitle">
+            This mode supports users who cannot or do not want to express goals in free-form text.
+            The system builds an initial decision frame from selections and micro-answers.
+          </div>
+        </div>
+
+        <div class="two-column">
+          <div>
+            <label>Choose the closest decision domain</label>
+            <div class="domain-grid" id="domainGrid"></div>
+
+            <div style="margin-top:12px;">
+              <label>What feels most urgent right now?</label>
+              <div class="hint">Select any items that are salient. This selection is used to infer initial criteria weights.</div>
+              <div class="check-grid" id="urgencyGrid"></div>
+            </div>
+
+            <div class="fields" style="margin-top:12px;">
+              <div class="range-group">
+                <label for="timeHorizon">Time horizon</label>
+                <input type="range" id="timeHorizon" min="1" max="5" value="3">
+                <div class="range-labels"><span>immediate</span><span>mixed</span><span>long-term</span></div>
+              </div>
+
+              <div class="range-group">
+                <label for="riskTolerance">Risk tolerance</label>
+                <input type="range" id="riskTolerance" min="1" max="5" value="3">
+                <div class="range-labels"><span>low</span><span>moderate</span><span>high</span></div>
+              </div>
+
+              <div class="range-group">
+                <label for="startingClarity">Starting clarity</label>
+                <input type="range" id="startingClarity" min="1" max="5" value="2">
+                <div class="range-labels"><span>very unclear</span><span>moderate</span><span>very clear</span></div>
+              </div>
+
+              <div>
+                <label for="textAbility">Free-text availability</label>
+                <select id="textAbility">
+                  <option value="optional" selected>Text is optional</option>
+                  <option value="available">Text is available</option>
+                  <option value="unavailable">Text is not available</option>
+                </select>
+                <div class="hint">If text is not available, later steps will remain usable without typing.</div>
+              </div>
+            </div>
+
+            <div class="button-row">
+              <button id="generateFrameBtn">Generate draft decision frame</button>
+              <button class="secondary" id="resetStep0Btn">Reset selections</button>
+            </div>
+          </div>
+
+          <div>
+            <div class="pill"><span class="pill-label">System output</span><span id="frameStatus">No draft yet</span></div>
+            <div class="analysis-card" id="draftFrameCard" style="display:none;">
+              <div class="analysis-title">Draft decision frame</div>
+              <div id="draftFrameText"></div>
+            </div>
+            <div class="analysis-card" id="draftOptionsCard" style="display:none;">
+              <div class="analysis-title">Draft option set</div>
+              <div id="draftOptionsText"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="button-row">
+          <button class="outline" id="toStep1Btn" disabled>Continue to Step 1</button>
+        </div>
+      </div>
+
+      <!-- STEP 1 -->
+      <div class="panel" id="step-1">
+        <div class="panel-header">
+          <div class="panel-title">Step 1. Draft frame and edits</div>
+          <div class="panel-subtitle">
+            The user can correct the system’s draft frame. Text is optional; structured choices remain sufficient.
+          </div>
+        </div>
+
+        <div class="two-column">
+          <div>
+            <div class="analysis-card">
+              <div class="analysis-title">Current decision frame</div>
+              <div id="currentFrameText" class="small-text"></div>
+            </div>
+
+            <div style="margin-top:12px;">
+              <label for="optionalText">Optional: add or correct details</label>
+              <textarea id="optionalText" placeholder="If available, add context that the system could not infer from selections."></textarea>
+              <div class="hint">This field is disabled when free text is marked as unavailable in Step 0.</div>
+            </div>
+
+            <div style="margin-top:12px;">
+              <label for="constraintsText">Constraints or non-negotiables</label>
+              <textarea id="constraintsText" placeholder="Examples: fixed deadline, budget, location limits, required approvals."></textarea>
+            </div>
+
+            <div class="button-row">
+              <button id="saveStep1Btn">Save edits</button>
+              <button class="outline" id="backToStep0Btn">Back to Step 0</button>
+              <button class="outline" id="toStep2Btn" disabled>Continue to Step 2</button>
+            </div>
+          </div>
+
+          <div>
+            <div class="pill"><span class="pill-label">Tracking</span><span id="articulationPill">Articulation effort: 0 characters</span></div>
+            <div class="analysis-card">
+              <div class="analysis-title">Operationalization note</div>
+              <div class="small-text">
+                This prototype treats articulation effort as the amount of free-form text entered.
+                In an evaluation, effort can also include time to first usable frame and number of clarification steps.
+              </div>
+            </div>
+            <div class="analysis-card">
+              <div class="analysis-title">Current criteria weights</div>
+              <div id="criteriaWeightsText" class="small-text"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- STEP 2 -->
+      <div class="panel" id="step-2">
+        <div class="panel-header">
+          <div class="panel-title">Step 2. Option space</div>
+          <div class="panel-subtitle">
+            The system externalizes the option space. Reordering is supported to test sensitivity to anchoring effects.
+          </div>
+        </div>
+
+        <div class="two-column">
+          <div>
+            <label for="userOptionText">Optional: add an option (one at a time)</label>
+            <input id="userOptionText" type="text" placeholder="Example: commit to a short trial rather than a permanent change.">
+            <div class="button-row">
+              <button id="addOptionBtn">Add option</button>
+              <button class="secondary" id="resetOptionsBtn">Reset to draft options</button>
+            </div>
+
+            <div class="options-list" id="optionsList"></div>
+
+            <div class="button-row">
+              <button id="computeRecBtn">Compute recommendation</button>
+            </div>
+          </div>
+
+          <div>
+            <div class="analysis-card">
+              <div class="analysis-title">Decision engine mode</div>
+              <div class="small-text">
+                This prototype includes two internal modes. “Raw” intentionally contains simple order and framing sensitivity
+                to illustrate why stability checks are needed. “Debiased” removes these sensitivities.
+              </div>
+              <div class="toggle-row" style="margin-top:8px;">
+                <button class="toggle active" id="modeRawBtn" type="button">Raw</button>
+                <button class="toggle" id="modeDebiasedBtn" type="button">Debiased</button>
+              </div>
+            </div>
+
+            <div class="rec-box" id="recBox" style="display:none;"></div>
+
+            <div class="analysis-card" style="margin-top:10px;">
+              <div class="analysis-title">Interpretation note</div>
+              <div class="small-text">
+                In a full system, an LLM would generate option rationales and surface uncertainties.
+                Here, the recommendation is a deterministic proxy used to demonstrate stability checks and bias-aware interaction patterns.
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="button-row">
+          <button class="outline" id="backToStep1Btn">Back to Step 1</button>
+          <button class="outline" id="toStep3Btn" disabled>Continue to Step 3</button>
+        </div>
+      </div>
+
+      <!-- STEP 3 -->
+      <div class="panel" id="step-3">
+        <div class="panel-header">
+          <div class="panel-title">Step 3. Bias prompts and evidence notes</div>
+          <div class="panel-subtitle">
+            The interface invites reflection on common cognitive biases and records evidence and counter-evidence.
+          </div>
+        </div>
+
+        <div class="two-column">
+          <div>
+            <label>Bias prompts</label>
+            <div class="hint">Select any prompts that might be relevant. The system treats these as reflection cues, not diagnoses.</div>
+            <div class="bias-list" id="biasList"></div>
+          </div>
+
+          <div>
+            <div class="analysis-card">
+              <div class="analysis-title">Evidence and counter-evidence notes</div>
+              <label for="evidenceNotes" style="margin-top:6px;">Notes</label>
+              <textarea id="evidenceNotes" placeholder="Example: What evidence supports each option? What is missing or unreliable?"></textarea>
+            </div>
+
+            <div class="analysis-card" style="margin-top:10px;">
+              <div class="analysis-title">Post-prompt confidence</div>
+              <div class="range-group" style="margin-top:6px;">
+                <label for="confidenceAfter">How confident are you that you understand your own reasoning?</label>
+                <input type="range" id="confidenceAfter" min="1" max="5" value="3">
+                <div class="range-labels"><span>low</span><span>moderate</span><span>high</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="button-row">
+          <button class="outline" id="backToStep2Btn">Back to Step 2</button>
+          <button class="outline" id="toStep4Btn">Continue to Step 4</button>
+        </div>
+      </div>
+
+      <!-- STEP 4 -->
+      <div class="panel" id="step-4">
+        <div class="panel-header">
+          <div class="panel-title">Step 4. Stability checks and export</div>
+          <div class="panel-subtitle">
+            The system runs stability checks based on metamorphic testing principles: the recommendation should remain
+            stable under surface-form changes that do not alter the decision content.
+          </div>
+        </div>
+
+        <div class="fields">
+          <div>
+            <label for="preferredOption">Current preferred option (optional)</label>
+            <input id="preferredOption" type="text" placeholder="Example: choose a time-bounded trial option.">
+            <div class="hint">This field is optional and can remain empty when the decision is still open.</div>
+          </div>
+          <div>
+            <div id="clarityShiftPill" class="status-pill">Clarity shift not computed</div>
+            <div class="hint" style="margin-top:6px;">Computed as confidence-after minus starting clarity.</div>
+          </div>
+        </div>
+
+        <div class="button-row" style="margin-top:10px;">
+          <button id="runStabilityBtn">Run stability checks</button>
+          <button class="secondary" id="generateLogBtn">Generate decision log</button>
+          <button class="secondary" id="copyLogBtn" disabled>Copy log</button>
+        </div>
+
+        <div id="stabilityResults" style="display:none;">
+          <table>
+            <thead>
+              <tr>
+                <th>Test</th>
+                <th>Metamorphic relation</th>
+                <th>Observed change</th>
+                <th>Result</th>
+              </tr>
+            </thead>
+            <tbody id="stabilityTableBody"></tbody>
+          </table>
+          <div class="analysis-card" style="margin-top:10px;">
+            <div class="analysis-title">Stability interpretation</div>
+            <div id="stabilityInterpretation" class="small-text"></div>
+          </div>
+        </div>
+
+        <div class="rec-box" id="decisionLogBox" style="display:none;"></div>
+
+        <div class="button-row" style="margin-top:10px;">
+          <button class="outline" id="backToStep3Btn">Back to Step 3</button>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    Prototype demonstration only. Replace the internal recommendation proxy with an LLM-backed component in a full system.
+  </footer>
+</div>
+
+<script>
+(function(){
+  function $(id){return document.getElementById(id);}
+
+  const state = {
+    domain: "",
+    urgencies: [],
+    timeHorizon: 3,
+    riskTolerance: 3,
+    startingClarity: 2,
+    textAbility: "optional",
+    draftFrame: "",
+    draftOptions: [],
+    optionalText: "",
+    constraintsText: "",
+    criteriaWeights: {time:0.2, money:0.2, risk:0.2, approval:0.2, uncertainty:0.2},
+    options: [],
+    engineMode: "raw",
+    lastRecommendation: null,
+    selectedBiases: [],
+    evidenceNotes: "",
+    confidenceAfter: 3,
+    preferredOption: ""
+  };
+
+  const domains = [
+    {id:"education", title:"Education", desc:"Program choice, advisor fit, skill focus."},
+    {id:"career", title:"Career", desc:"Role selection, job change, upskilling."},
+    {id:"health", title:"Health", desc:"Non-clinical planning and trade-offs."},
+    {id:"finance", title:"Finances", desc:"Budget, savings, major purchases."},
+    {id:"relationships", title:"Relationships", desc:"Interpersonal and family decisions."},
+    {id:"unsure", title:"Not sure", desc:"Start broad and refine iteratively."}
+  ];
+
+  const urgencies = [
+    {id:"time", title:"Time pressure", desc:"A deadline or rapidly changing situation."},
+    {id:"money", title:"Financial pressure", desc:"Cost, tuition, salary, or budget constraints."},
+    {id:"risk", title:"High downside risk", desc:"A wrong decision could be costly."},
+    {id:"approval", title:"Social expectations", desc:"Supervisor, family, or peer pressures matter."},
+    {id:"uncertainty", title:"High uncertainty", desc:"Information is missing or contradictory."}
+  ];
+
+  const biasDefinitions = [
+    {id:"anchoring", name:"Anchoring", short:"Early options or numbers disproportionately shape judgment."},
+    {id:"confirmation", name:"Confirmation bias", short:"Preference for information that supports a current leaning."},
+    {id:"statusquo", name:"Status quo bias", short:"Inertia toward the current situation."},
+    {id:"loss", name:"Loss aversion", short:"Losses are weighted more heavily than equivalent gains."},
+    {id:"framing", name:"Framing effects", short:"Equivalent statements lead to different choices."},
+    {id:"social", name:"Social comparison", short:"Decisions track perceived expectations of others."}
+  ];
+
+  function setActiveStep(step){
+    document.querySelectorAll(".step").forEach(el=>{
+      el.classList.toggle("active", el.dataset.step === String(step));
+    });
+    document.querySelectorAll(".panel").forEach(el=>{
+      el.classList.toggle("active", el.id === "step-" + step);
+    });
+  }
+
+  function markCompleted(step){
+    const el=document.querySelector('.step[data-step="'+step+'"]');
+    if(el){el.classList.add("completed");}
+  }
+
+  function renderDomainGrid(){
+    const grid=$("domainGrid");
+    grid.innerHTML="";
+    domains.forEach(d=>{
+      const card=document.createElement("div");
+      card.className="domain-card";
+      card.dataset.id=d.id;
+      card.innerHTML='<div class="domain-title">'+d.title+'</div><div class="domain-desc">'+d.desc+'</div>';
+      card.addEventListener("click", ()=>{
+        state.domain=d.id;
+        document.querySelectorAll(".domain-card").forEach(c=>c.classList.toggle("selected", c.dataset.id===d.id));
+      });
+      grid.appendChild(card);
+    });
+  }
+
+  function renderUrgencyGrid(){
+    const grid=$("urgencyGrid");
+    grid.innerHTML="";
+    urgencies.forEach(u=>{
+      const wrap=document.createElement("label");
+      wrap.className="check-item";
+      wrap.innerHTML='<input type="checkbox" data-id="'+u.id+'"><div><div class="check-title">'+u.title+'</div><div class="check-desc">'+u.desc+'</div></div>';
+      const cb=wrap.querySelector("input");
+      cb.addEventListener("change", ()=>{
+        const id=u.id;
+        if(cb.checked){
+          if(!state.urgencies.includes(id)) state.urgencies.push(id);
+        }else{
+          state.urgencies=state.urgencies.filter(x=>x!==id);
+        }
+        updateCriteriaWeights();
+      });
+      grid.appendChild(wrap);
+    });
+  }
+
+  function updateCriteriaWeights(){
+    // Simple normalization: selected urgency gets extra weight.
+    const base = {time:0.2, money:0.2, risk:0.2, approval:0.2, uncertainty:0.2};
+    const bump = 0.15;
+    state.urgencies.forEach(id=>{
+      if(base[id] !== undefined){ base[id] += bump; }
+    });
+    const sum = Object.values(base).reduce((a,b)=>a+b,0);
+    Object.keys(base).forEach(k=>base[k]=base[k]/sum);
+    state.criteriaWeights = base;
+    $("criteriaWeightsText").textContent = Object.entries(base)
+      .map(([k,v])=>k+": "+v.toFixed(2))
+      .join("  |  ");
+  }
+
+  function domainTemplate(){
+    const d = domains.find(x=>x.id===state.domain);
+    const domainName = d ? d.title : "General";
+    const urgent = state.urgencies.length ? state.urgencies.join(", ") : "none selected";
+    const horizonLabel = state.timeHorizon <=2 ? "short-term" : (state.timeHorizon===3 ? "mixed" : "long-term");
+    const riskLabel = state.riskTolerance <=2 ? "low" : (state.riskTolerance===3 ? "moderate" : "high");
+    const clarity = state.startingClarity;
+
+    const lines=[];
+    lines.push("Domain: " + domainName + ".");
+    lines.push("Urgency signals: " + urgent + ".");
+    lines.push("Time horizon: " + horizonLabel + ".");
+    lines.push("Risk tolerance: " + riskLabel + ".");
+    lines.push("Starting clarity: " + clarity + " out of 5.");
+    lines.push("");
+    lines.push("Draft problem frame:");
+    lines.push("The user is facing a decision in the " + domainName.toLowerCase() + " domain but is not yet able to state a precise goal in free-form language.");
+    lines.push("The system will treat the first objective as reducing uncertainty and producing a small, explicit set of options with stated constraints and criteria.");
+    return lines.join("\n");
+  }
+
+  function draftOptionsForDomain(){
+    const d=state.domain || "unsure";
+    if(d==="education"){
+      return [
+        {text:"Remain in the current program for one semester while defining a review point and collecting evidence."},
+        {text:"Switch to a closely related program or track that better matches expected outcomes."},
+        {text:"Take a time-bounded pause and focus on targeted skill-building before re-committing."}
+      ];
+    }
+    if(d==="career"){
+      return [
+        {text:"Stay in the current role for a defined period while running a structured job search."},
+        {text:"Pursue a targeted upskilling plan before changing roles."},
+        {text:"Seek a role change now and accept short-term disruption for potential long-term fit."}
+      ];
+    }
+    if(d==="finance"){
+      return [
+        {text:"Delay the decision and gather concrete budget data for a fixed period."},
+        {text:"Choose the conservative option that minimizes downside risk."},
+        {text:"Choose the option with higher upside and accept a higher variance outcome."}
+      ];
+    }
+    if(d==="health"){
+      return [
+        {text:"Maintain the current approach while obtaining a second opinion and documenting outcomes."},
+        {text:"Adopt a time-bounded trial of an alternative intervention with explicit evaluation criteria."},
+        {text:"Focus on reversible changes first and escalate only after uncertainty is reduced."}
+      ];
+    }
+    if(d==="relationships"){
+      return [
+        {text:"Maintain the current arrangement while clarifying expectations with a structured conversation."},
+        {text:"Run a time-bounded experiment with explicit criteria for success and failure."},
+        {text:"Introduce a change now to test whether the current pattern is sustainable."}
+      ];
+    }
+    return [
+      {text:"Clarify the decision question by selecting a concrete domain and listing constraints."},
+      {text:"Take one small reversible step that reduces uncertainty before committing."},
+      {text:"Delay final commitment and set a specific date for re-evaluation with new information."}
+    ];
+  }
+
+  function generateDraft(){
+    if(!state.domain){
+      alert("Select a domain to generate a draft frame.");
+      return;
+    }
+    state.timeHorizon = Number($("timeHorizon").value || 3);
+    state.riskTolerance = Number($("riskTolerance").value || 3);
+    state.startingClarity = Number($("startingClarity").value || 2);
+    state.textAbility = $("textAbility").value;
+
+    state.draftFrame = domainTemplate();
+    state.draftOptions = draftOptionsForDomain();
+    state.options = state.draftOptions.map((o,idx)=>({id:"opt"+(idx+1), text:o.text, origin:"System"}));
+
+    $("frameStatus").textContent = "Draft generated";
+    $("draftFrameText").textContent = state.draftFrame;
+    $("draftFrameCard").style.display="block";
+
+    $("draftOptionsText").textContent = state.draftOptions.map((o,i)=>"S"+(i+1)+". "+o.text).join("\n");
+    $("draftOptionsCard").style.display="block";
+
+    $("toStep1Btn").disabled=false;
+    markCompleted(0);
+
+    // propagate to step 1
+    $("currentFrameText").textContent = state.draftFrame;
+    updateCriteriaWeights();
+    applyTextAvailability();
+    renderOptionsList();
+  }
+
+  function applyTextAvailability(){
+    const disabled = (state.textAbility === "unavailable");
+    $("optionalText").disabled = disabled;
+    if(disabled){
+      $("optionalText").value = "";
+      state.optionalText = "";
+    }
+  }
+
+  function articulationCount(){
+    const t = ($("optionalText").value || "") + ($("constraintsText").value || "");
+    return t.length;
+  }
+
+  function updateArticulationPill(){
+    $("articulationPill").textContent = "Articulation effort: " + articulationCount() + " characters";
+  }
+
+  function renderOptionsList(){
+    const list=$("optionsList");
+    list.innerHTML="";
+    state.options.forEach((opt, idx)=>{
+      const row=document.createElement("div");
+      row.className="option-row";
+      row.dataset.id=opt.id;
+
+      const main=document.createElement("div");
+      main.className="option-main";
+      main.innerHTML='<div class="option-label">'+(idx+1)+". "+opt.origin+'</div><div class="option-text">'+opt.text+'</div>';
+
+      const actions=document.createElement("div");
+      actions.className="option-actions";
+
+      const up=document.createElement("button");
+      up.className="mini-btn";
+      up.textContent="Up";
+      up.disabled = (idx===0);
+      up.addEventListener("click", ()=>{
+        if(idx===0) return;
+        const tmp=state.options[idx-1];
+        state.options[idx-1]=state.options[idx];
+        state.options[idx]=tmp;
+        renderOptionsList();
+      });
+
+      const down=document.createElement("button");
+      down.className="mini-btn";
+      down.textContent="Down";
+      down.disabled = (idx===state.options.length-1);
+      down.addEventListener("click", ()=>{
+        if(idx===state.options.length-1) return;
+        const tmp=state.options[idx+1];
+        state.options[idx+1]=state.options[idx];
+        state.options[idx]=tmp;
+        renderOptionsList();
+      });
+
+      actions.appendChild(up);
+      actions.appendChild(down);
+
+      row.appendChild(main);
+      row.appendChild(actions);
+      list.appendChild(row);
+    });
+  }
+
+  function addOption(){
+    const v=$("userOptionText").value.trim();
+    if(!v) return;
+    state.options.push({id:"user"+Date.now(), text:v, origin:"User"});
+    $("userOptionText").value="";
+    renderOptionsList();
+  }
+
+  function resetOptions(){
+    state.options = state.draftOptions.map((o,idx)=>({id:"opt"+(idx+1), text:o.text, origin:"System"}));
+    renderOptionsList();
+    $("recBox").style.display="none";
+    state.lastRecommendation=null;
+    $("toStep3Btn").disabled=true;
+  }
+
+  function setEngineMode(mode){
+    state.engineMode=mode;
+    $("modeRawBtn").classList.toggle("active", mode==="raw");
+    $("modeDebiasedBtn").classList.toggle("active", mode==="debiased");
+    if(state.lastRecommendation){
+      computeRecommendation();
+    }
+  }
+
+  function optionAttributes(text){
+    // Heuristic attribute extraction (0..1). These are proxies to support a demonstration.
+    // time: shorter is higher, money: cheaper is higher, risk: lower risk is higher,
+    // approval: social alignment is higher, uncertainty: uncertainty reduction is higher.
+    const t=text.toLowerCase();
+    const attr={time:0.5, money:0.5, risk:0.5, approval:0.5, uncertainty:0.5};
+
+    if(t.includes("delay") || t.includes("gather") || t.includes("collect")){ attr.uncertainty=0.9; attr.time=0.3; }
+    if(t.includes("conservative") || t.includes("minimizes downside") || t.includes("maintain") || t.includes("stay")){ attr.risk=0.85; attr.approval=0.65; }
+    if(t.includes("switch") || t.includes("change") || t.includes("disruption")){ attr.risk=0.35; attr.time=0.55; }
+    if(t.includes("pause") || t.includes("trial") || t.includes("time-bounded")){ attr.risk=0.65; attr.uncertainty=0.8; }
+    if(t.includes("upskilling") || t.includes("skill")){ attr.time=0.35; attr.uncertainty=0.75; attr.money=0.45; }
+    if(t.includes("higher upside") || t.includes("variance")){ attr.risk=0.25; }
+    return attr;
+  }
+
+  function scoreOption(opt, config){
+    const w=state.criteriaWeights;
+    const a=optionAttributes(opt.text);
+    let score = (w.time*a.time)+(w.money*a.money)+(w.risk*a.risk)+(w.approval*a.approval)+(w.uncertainty*a.uncertainty);
+
+    if(config.mode==="raw"){
+      // Anchoring: small bonus to first option.
+      if(config.index===0){ score += 0.08; }
+
+      // Primacy in priorities: overweight the first selected urgency.
+      if(state.urgencies.length){
+        const first=state.urgencies[0];
+        if(a[first] !== undefined){ score += 0.06 * a[first]; }
+      }
+
+      // Framing: under "loss" framing, penalize low-risk scores more strongly.
+      if(config.frame==="loss"){
+        score = score - 0.08*(1-a.risk);
+      }
+      if(config.frame==="gain"){
+        score = score + 0.04*(1-a.risk);
+      }
+    }else{
+      // Debiased: no order sensitivity and no framing manipulation.
+    }
+    return score;
+  }
+
+  function computeRecommendation(frame="neutral", optionsOverride=null){
+    const opts = optionsOverride || state.options;
+    if(!opts.length){
+      alert("No options available.");
+      return null;
+    }
+
+    const scores = opts.map((opt, idx)=>({
+      id:opt.id,
+      text:opt.text,
+      origin:opt.origin,
+      score:scoreOption(opt, {mode:state.engineMode, index:idx, frame:frame})
+    }));
+
+    scores.sort((a,b)=>b.score-a.score);
+    const best=scores[0];
+    state.lastRecommendation = best;
+
+    // Render box if this is the visible computation
+    if(!optionsOverride){
+      const lines=[];
+      lines.push("Recommendation ("+ (state.engineMode==="raw" ? "Raw" : "Debiased") + " mode)");
+      lines.push("Selected option: " + best.text);
+      lines.push("");
+      lines.push("Score breakdown (highest to lowest):");
+      scores.forEach((s,i)=>lines.push((i+1)+". "+s.score.toFixed(3)+"  |  "+s.text));
+      $("recBox").textContent = lines.join("\n");
+      $("recBox").style.display="block";
+      $("toStep3Btn").disabled=false;
+      markCompleted(2);
+    }
+
+    return best;
+  }
+
+  function computeClarityShift(){
+    const start=state.startingClarity;
+    const end=state.confidenceAfter;
+    const diff=end-start;
+    const pill=$("clarityShiftPill");
+    if(diff > 0.5){
+      pill.className="status-pill";
+      pill.textContent="Net clarity increase: +" + diff.toFixed(1);
+    }else if(diff < -0.5){
+      pill.className="warning-pill";
+      pill.textContent="Net clarity decrease: " + diff.toFixed(1);
+    }else{
+      pill.className="status-pill";
+      pill.textContent="Clarity approximately stable: " + diff.toFixed(1);
+    }
+  }
+
+  function renderBiasList(){
+    const list=$("biasList");
+    list.innerHTML="";
+    biasDefinitions.forEach(b=>{
+      const div=document.createElement("div");
+      div.className="bias-item";
+      div.dataset.id=b.id;
+      div.innerHTML='<div class="bias-name">'+b.name+'</div><div class="bias-short">'+b.short+'</div>';
+      div.addEventListener("click", ()=>{
+        const id=b.id;
+        if(state.selectedBiases.includes(id)){
+          state.selectedBiases=state.selectedBiases.filter(x=>x!==id);
+        }else{
+          state.selectedBiases.push(id);
+        }
+        div.classList.toggle("selected", state.selectedBiases.includes(id));
+        markCompleted(3);
+      });
+      list.appendChild(div);
+    });
+  }
+
+  function runStabilityChecks(){
+    if(!state.options.length){
+      alert("Generate options first.");
+      return;
+    }
+    const base = computeRecommendation("neutral", state.options);
+    const results=[];
+
+    // Test 1: Option order should not affect recommendation.
+    const reversed=[...state.options].reverse();
+    const recRev = computeRecommendation("neutral", reversed);
+    results.push({
+      name:"Option order sensitivity",
+      relation:"Reordering options should not change the recommended option when decision content is unchanged.",
+      observed: recRev.text === base.text ? "No change" : "Changed recommendation",
+      ok: recRev.text === base.text
+    });
+
+    // Test 2: Gain/loss framing should not reverse recommendation if evidence is unchanged.
+    const recLoss = computeRecommendation("loss", state.options);
+    results.push({
+      name:"Framing sensitivity",
+      relation:"Switching gain/loss framing should not reverse the recommendation when the underlying decision information is unchanged.",
+      observed: recLoss.text === base.text ? "No change" : "Changed under loss framing",
+      ok: recLoss.text === base.text
+    });
+
+    // Test 3: Priority order in the internal representation should not dominate if weights are stable.
+    // Proxy: rotate urgencies and recompute (only affects raw mode).
+    const saved = [...state.urgencies];
+    if(state.urgencies.length > 1){
+      state.urgencies = [...state.urgencies.slice(1), state.urgencies[0]];
+    }
+    const recRot = computeRecommendation("neutral", state.options);
+    state.urgencies = saved;
+    results.push({
+      name:"Priority-order sensitivity",
+      relation:"Reordering equally valid priority signals should not substantially alter the recommendation.",
+      observed: recRot.text === base.text ? "No change" : "Changed after priority rotation",
+      ok: recRot.text === base.text
+    });
+
+    const body=$("stabilityTableBody");
+    body.innerHTML="";
+    let flips=0;
+    results.forEach(r=>{
+      if(!r.ok) flips += 1;
+      const tr=document.createElement("tr");
+      const resLabel = r.ok ? '<span class="status-pill">Stable</span>' : '<span class="warning-pill">Unstable</span>';
+      tr.innerHTML = '<td>'+r.name+'</td><td>'+r.relation+'</td><td>'+r.observed+'</td><td>'+resLabel+'</td>';
+      body.appendChild(tr);
+    });
+
+    const interp=[];
+    interp.push("Baseline recommended option: " + base.text);
+    interp.push("Number of tests that changed the recommendation: " + flips + " out of " + results.length + ".");
+    if(flips===0){
+      interp.push("No instability was detected under the tested perturbations. This reduces the risk of a fragile or misleading recommendation.");
+    }else{
+      interp.push("Instability was detected. Under metamorphic testing principles, this suggests the recommendation may be unreliable and should be treated as a potential decision mirage until additional evidence or constraints are collected.");
+    }
+    interp.push("Current engine mode: " + (state.engineMode==="raw" ? "Raw" : "Debiased") + ".");
+    interp.push("Note: In a full system, these tests would be applied to LLM-generated recommendations by varying surface-form prompts and inspecting output invariance.");
+    $("stabilityInterpretation").textContent = interp.join(" ");
+    $("stabilityResults").style.display="block";
+    markCompleted(4);
+    computeClarityShift();
+  }
+
+  function generateDecisionLog(){
+    const lines=[];
+    lines.push("Structured decision log");
+    lines.push("––––––––––––––––––––––");
+    lines.push("");
+    lines.push("Decision frame");
+    lines.push(state.draftFrame || "(no draft frame)");
+    if(state.optionalText){
+      lines.push("");
+      lines.push("User-added details");
+      lines.push(state.optionalText);
+    }
+    if(state.constraintsText){
+      lines.push("");
+      lines.push("Constraints");
+      lines.push(state.constraintsText);
+    }
+    lines.push("");
+    lines.push("Criteria weights");
+    lines.push(Object.entries(state.criteriaWeights).map(([k,v])=>k+": "+v.toFixed(2)).join(" | "));
+    lines.push("");
+    lines.push("Options (current order)");
+    state.options.forEach((o,i)=>lines.push((i+1)+". ["+o.origin+"] "+o.text));
+    lines.push("");
+    lines.push("Engine mode");
+    lines.push(state.engineMode);
+    if(state.lastRecommendation){
+      lines.push("");
+      lines.push("Last recommendation");
+      lines.push(state.lastRecommendation.text);
+      lines.push("Score: " + state.lastRecommendation.score.toFixed(3));
+    }
+    lines.push("");
+    lines.push("Bias prompts selected");
+    if(state.selectedBiases.length){
+      state.selectedBiases.forEach(id=>{
+        const b=biasDefinitions.find(x=>x.id===id);
+        if(b) lines.push("- " + b.name);
+      });
+    }else{
+      lines.push("(none)");
+    }
+    if(state.evidenceNotes){
+      lines.push("");
+      lines.push("Evidence notes");
+      lines.push(state.evidenceNotes);
+    }
+    lines.push("");
+    lines.push("Ratings");
+    lines.push("Starting clarity: " + state.startingClarity + " / 5");
+    lines.push("Confidence after prompts: " + state.confidenceAfter + " / 5");
+    lines.push("Clarity shift: " + (state.confidenceAfter - state.startingClarity).toFixed(1));
+    if(state.preferredOption){
+      lines.push("");
+      lines.push("Current preferred option (user-reported)");
+      lines.push(state.preferredOption);
+    }
+    lines.push("");
+    lines.push("End of log.");
+    const text=lines.join("\n");
+    $("decisionLogBox").textContent=text;
+    $("decisionLogBox").style.display="block";
+    $("copyLogBtn").disabled=false;
+  }
+
+  async function copyDecisionLog(){
+    const text=$("decisionLogBox").textContent;
+    try{
+      await navigator.clipboard.writeText(text);
+      $("copyLogBtn").textContent="Copied";
+      setTimeout(()=>{$("copyLogBtn").textContent="Copy log";}, 1200);
+    }catch(e){
+      alert("Clipboard access is not available. Please copy the text manually.");
+    }
+  }
+
+  // Event wiring
+  renderDomainGrid();
+  renderUrgencyGrid();
+  renderBiasList();
+  updateCriteriaWeights();
+
+  document.querySelectorAll(".step").forEach(el=>{
+    el.addEventListener("click", ()=>setActiveStep(el.dataset.step));
+  });
+
+  $("timeHorizon").addEventListener("input", e=>{state.timeHorizon=Number(e.target.value);});
+  $("riskTolerance").addEventListener("input", e=>{state.riskTolerance=Number(e.target.value);});
+  $("startingClarity").addEventListener("input", e=>{state.startingClarity=Number(e.target.value);});
+  $("textAbility").addEventListener("change", e=>{state.textAbility=e.target.value; applyTextAvailability();});
+
+  $("generateFrameBtn").addEventListener("click", generateDraft);
+
+  $("resetStep0Btn").addEventListener("click", ()=>{
+    state.domain="";
+    state.urgencies=[];
+    document.querySelectorAll(".domain-card").forEach(c=>c.classList.remove("selected"));
+    document.querySelectorAll("#urgencyGrid input[type=checkbox]").forEach(cb=>cb.checked=false);
+    $("timeHorizon").value=3;
+    $("riskTolerance").value=3;
+    $("startingClarity").value=2;
+    $("textAbility").value="optional";
+    $("draftFrameCard").style.display="none";
+    $("draftOptionsCard").style.display="none";
+    $("frameStatus").textContent="No draft yet";
+    $("toStep1Btn").disabled=true;
+    updateCriteriaWeights();
+  });
+
+  $("toStep1Btn").addEventListener("click", ()=>{
+    setActiveStep(1);
+    markCompleted(0);
+  });
+
+  $("backToStep0Btn").addEventListener("click", ()=>setActiveStep(0));
+  $("backToStep1Btn").addEventListener("click", ()=>setActiveStep(1));
+  $("backToStep2Btn").addEventListener("click", ()=>setActiveStep(2));
+  $("backToStep3Btn").addEventListener("click", ()=>setActiveStep(3));
+
+  $("optionalText").addEventListener("input", ()=>{
+    state.optionalText=$("optionalText").value;
+    updateArticulationPill();
+  });
+  $("constraintsText").addEventListener("input", ()=>{
+    state.constraintsText=$("constraintsText").value;
+    updateArticulationPill();
+  });
+
+  $("saveStep1Btn").addEventListener("click", ()=>{
+    state.optionalText=$("optionalText").value;
+    state.constraintsText=$("constraintsText").value;
+    updateArticulationPill();
+    $("toStep2Btn").disabled=false;
+    markCompleted(1);
+  });
+
+  $("toStep2Btn").addEventListener("click", ()=>setActiveStep(2));
+
+  $("addOptionBtn").addEventListener("click", addOption);
+  $("resetOptionsBtn").addEventListener("click", resetOptions);
+
+  $("modeRawBtn").addEventListener("click", ()=>setEngineMode("raw"));
+  $("modeDebiasedBtn").addEventListener("click", ()=>setEngineMode("debiased"));
+
+  $("computeRecBtn").addEventListener("click", ()=>{
+    computeRecommendation();
+  });
+
+  $("toStep3Btn").addEventListener("click", ()=>setActiveStep(3));
+
+  $("evidenceNotes").addEventListener("input", e=>{state.evidenceNotes=e.target.value;});
+  $("confidenceAfter").addEventListener("input", e=>{state.confidenceAfter=Number(e.target.value);});
+
+  $("toStep4Btn").addEventListener("click", ()=>{
+    computeClarityShift();
+    setActiveStep(4);
+  });
+
+  $("preferredOption").addEventListener("input", e=>{state.preferredOption=e.target.value;});
+  $("runStabilityBtn").addEventListener("click", runStabilityChecks);
+  $("generateLogBtn").addEventListener("click", generateDecisionLog);
+  $("copyLogBtn").addEventListener("click", copyDecisionLog);
+
+  // Ensure Step 1 disabled state on load
+  applyTextAvailability();
+})();
+</script>
+</body>
+</html>
